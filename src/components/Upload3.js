@@ -13,15 +13,28 @@ function Upload3({ans}) {
     let time = moment(single.FromDateTime, moment.defaultFormat).format(
       'YYYY-MM-DD HH:mm'
     );
-
     var d = moment(`${time}`);
-    var start = moment(`${date} 07:00`);
-    var end = moment(`${date} 19:00`);
-    var statement1 =
-      0 <= d.diff(start, 'hours') && d.diff(start, 'hours') <= 12; //should be true (only true if result is between 1-12)
-    var statement2 = 0 <= end.diff(d, 'hours') && end.diff(d, 'hours') <= 12;
+    var peakStart = moment(`${date} 07:00`);
+    var peakEnd = moment(`${date} 19:00`);
+
+    var duosStart = moment(`${date} 16:00`);
+    var duosEnd = moment(`${date} 19:00`);
+
+    var peakCondition1 =
+      0 <= d.diff(peakStart, 'hours') && d.diff(peakStart, 'hours') <= 12; //should be true (only true if result is between 0-12)
+    var peakCondition2 =
+      0 <= peakEnd.diff(d, 'hours') && peakEnd.diff(d, 'hours') <= 12;
     var weekday = moment(date).isoWeekday() <= 5;
-    var peakVol = statement1 && statement2 && weekday?value:null; 
+    var peakVol = peakCondition1 && peakCondition2 && weekday ? value : 0;
+
+    var duosCondition1 =
+      0 <= d.diff(duosStart, 'hours') && d.diff(duosStart, 'hours') <= 3; //should be true (only true if result is between 0-3)
+    var duosCondition2 =
+      0 <= duosEnd.diff(d, 'hours') && duosEnd.diff(d, 'hours') <= 3;
+    var duosVol = duosCondition1 && duosCondition2 && weekday ? value : 0;
+    var weekendVol = !weekday ? value : 0;
+    var offPeak = !peakCondition1 && !peakCondition2 && weekday ? value : 0;
+    var offPeakVol = weekendVol + offPeak;
 
     return {
       CurveCode: single.CurveCode,
@@ -30,7 +43,10 @@ function Upload3({ans}) {
       Month: month,
       value: value,
       peakVol: peakVol,
-      time: time,
+      duosVol: duosVol,
+      weekendVol: weekendVol,
+      offPeakVol: offPeakVol,
+
     };
   };
 
@@ -42,13 +58,13 @@ function Upload3({ans}) {
       return [...group, current];
     }
     group[i].value += current.value;
-    let j = group.findIndex(
-      (single) => single.FromDateTime === current.FromDateTime
-    );
-    if (j === -1) {
-      return [...group, current];
-    }
-    group[j].peakVol += current.peakVol;
+    // let j = group.findIndex(
+    //   (single) => single.FromDateTime === current.FromDateTime
+    // );
+    // if (j === -1) {
+    //   return [...group, current];
+    // }
+    group[i].peakVol += current.peakVol;
     return group;
   };
 
@@ -62,18 +78,23 @@ function Upload3({ans}) {
     }
     group[i].value += current.value; //returns totalVolume
     group[i].peakVol += current.peakVol; //returns peakVol
+    group[i].duosVol += current.duosVol; //returns duosVol
+    group[i].weekendVol += current.weekendVol; //returns weekendVol
+    group[i].offPeakVol += current.offPeakVol; //returns offPeakVol
+
     return group;
   };
 
 
   const perDayData = ans && ans?.map(mapper).reduce(getDays, []);
-  const main = ans && JSON.parse(JSON.stringify(perDayData));
-  const monthlyView = ans && main.reduce(getMonths, []);
+  const perDayCopy = ans && JSON.parse(JSON.stringify(perDayData));
+  const monthlyView = ans && perDayCopy.reduce(getMonths, []);
   //Sorting
   let sorted= ans && ans?.sort(function(a,b){
     return new Date(a.FromDateTime) - new Date(b.FromDateTime)});
   ans && console.log("Sorted=",sorted);
-  return <JsonToTable json={monthlyView} />;
+  ans && console.log("PerDayData",perDayData)
+  return <JsonToTable json={monthlyView} />
 }
 
 export default Upload3;
