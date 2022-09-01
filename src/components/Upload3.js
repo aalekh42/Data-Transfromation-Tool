@@ -58,13 +58,9 @@ function Upload3({ans}) {
       return [...group, current];
     }
     group[i].value += current.value;
-    // let j = group.findIndex(
-    //   (single) => single.FromDateTime === current.FromDateTime
-    // );
-    // if (j === -1) {
-    //   return [...group, current];
-    // }
     group[i].peakVol += current.peakVol;
+    group[i].duosVol +=current.duosVol;
+    //Can include weekends,offPeak value as well
     return group;
   };
 
@@ -92,8 +88,8 @@ function Upload3({ans}) {
   //Sorting
   let sorted= ans && ans?.sort(function(a,b){
     return new Date(a.FromDateTime) - new Date(b.FromDateTime)});
-  ans && console.log("Sorted=",sorted);
-  ans && console.log("PerDayData",perDayData)
+  // ans && console.log("Sorted=",sorted);
+  // ans && console.log("PerDayData",perDayData)
   return <JsonToTable json={monthlyView} />
 }
 
