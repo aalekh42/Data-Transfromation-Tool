@@ -1,5 +1,6 @@
 import ReadRemoteFile from './components/Upload';
 import Upload2 from './components/Upload2';
+import Upload3 from './components/Upload3';
 
 function App() {
   return (
