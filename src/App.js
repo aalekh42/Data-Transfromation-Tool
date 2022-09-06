@@ -1,14 +1,15 @@
-import ReadRemoteFile from './components/Upload';
-import Upload2 from './components/Upload2';
-import Upload3 from './components/Upload3';
+import React from 'react';
+import Home from './components/Home';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-function App() {
+export default function App() {
   return (
-<>
-<h2 style={{textAlign:'center'}}>DATA TRANSFROMATION TOOL</h2>
-<Upload2/>
-</>
+    <>
+      <Router>
+        <Routes>
+          <Route exact path="/" element={<Home />}></Route>
+        </Routes>
+      </Router>
+    </>
   );
 }
-
-export default App;

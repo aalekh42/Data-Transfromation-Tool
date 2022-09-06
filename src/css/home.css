@@ -1,0 +1,12 @@
+.home-heading{
+    text-align: center;
+    color:#1161AB;
+    text-transform: capitalize;
+    font-family: 'Roboto Slab';
+}
+
+.upload-block{
+    /* border:2px solid red; */
+    /* min-height: 85vh;
+    padding-top: 30vh; */
+}

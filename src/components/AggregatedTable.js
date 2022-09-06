@@ -1,9 +1,13 @@
 import React from 'react';
 import moment from 'moment';
 import { JsonToTable } from 'react-json-to-table';
+import AggregatedChart from './AggregatedChart';
+import { useTable } from 'react-table';
+import { COLUMNS } from './Columns';
+import '../css/table.css';
 
-
-function Upload3({ans}) {
+function AggregatedTable({ans}) {
+  
 
   const mapper = (single) => {
     let date = moment(single.FromDateTime).format('YYYY-MM-DD');
@@ -35,18 +39,20 @@ function Upload3({ans}) {
     var weekendVol = !weekday ? value : 0;
     var offPeak = !peakCondition1 && !peakCondition2 && weekday ? value : 0;
     var offPeakVol = weekendVol + offPeak;
+    let daysInMonth = moment(date).daysInMonth();
 
     return {
       CurveCode: single.CurveCode,
       FromDateTime: date,
       years: year,
       Month: month,
-      value: value,
+      TotalVol: value,
       peakVol: peakVol,
       duosVol: duosVol,
       weekendVol: weekendVol,
       offPeakVol: offPeakVol,
-
+      daysInMonth: daysInMonth,
+      MonthYear: month + year
     };
   };
 
@@ -57,7 +63,7 @@ function Upload3({ans}) {
     if (i === -1) {
       return [...group, current];
     }
-    group[i].value += current.value;
+    group[i].TotalVol += current.TotalVol;
     group[i].peakVol += current.peakVol;
     group[i].duosVol +=current.duosVol;
     //Can include weekends,offPeak value as well
@@ -72,11 +78,11 @@ function Upload3({ans}) {
     if (i === -1) {
       return [...group, current];
     }
-    group[i].value += current.value; //returns totalVolume
-    group[i].peakVol += current.peakVol; //returns peakVol
-    group[i].duosVol += current.duosVol; //returns duosVol
-    group[i].weekendVol += current.weekendVol; //returns weekendVol
-    group[i].offPeakVol += current.offPeakVol; //returns offPeakVol
+    group[i].TotalVol=parseInt(group[i].TotalVol + current.TotalVol); //returns totalVolume
+    group[i].peakVol = parseInt(group[i].peakVol +current.peakVol); //returns peakVol
+    group[i].duosVol =parseInt(group[i].duosVol +current.duosVol); //returns duosVol
+    group[i].weekendVol =parseInt(group[i].weekendVol +current.weekendVol); //returns weekendVol
+    group[i].offPeakVol =parseInt(group[i].offPeakVol + current.offPeakVol); //returns offPeakVol
 
     return group;
   };
@@ -85,12 +91,59 @@ function Upload3({ans}) {
   const perDayData = ans && ans?.map(mapper).reduce(getDays, []);
   const perDayCopy = ans && JSON.parse(JSON.stringify(perDayData));
   const monthlyView = ans && perDayCopy.reduce(getMonths, []);
+  ans &&  monthlyView?.map((elem, index) => {
+    elem.MonthlyBase = (elem.TotalVol / elem.daysInMonth).toFixed(2);
+    elem.Monthly_MW = (elem.TotalVol / 1000 / elem.daysInMonth / 24).toFixed(4);
+  });
+  const columns = React.useMemo(() => COLUMNS, []);
+  const data = React.useMemo(() =>monthlyView,[]);
+  
+  const tableInstance =useTable({
+    columns,
+    data,
+  });
+
+  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
+    tableInstance;
   //Sorting
-  let sorted= ans && ans?.sort(function(a,b){
-    return new Date(a.FromDateTime) - new Date(b.FromDateTime)});
+  // let sorted= ans && ans?.sort(function(a,b){
+  //   return new Date(a.FromDateTime) - new Date(b.FromDateTime)});
   // ans && console.log("Sorted=",sorted);
   // ans && console.log("PerDayData",perDayData)
-  return <JsonToTable json={monthlyView} />
+  return(
+    <div className='upload3-container fluid-container'>
+    {/* <JsonToTable json={monthlyView} /> */}
+    <h2>Aggregated View</h2>
+
+      <table {...getTableProps()}>
+        <thead>
+          {headerGroups.map((headerGroup) => (
+            <tr {...headerGroup.getHeaderGroupProps()}>
+              {headerGroup.headers.map((column) => (
+                <th {...column.getHeaderProps()}>{column.render('Header')}</th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody {...getTableBodyProps()}>
+          {rows.map((row) => {
+            prepareRow(row);
+            return (
+              <tr {...row.getRowProps()}>
+                {row.cells.map((cell) => (
+                  // console.log('Cells', cell.value);
+                  <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                ))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <h2>Visualized Graph for Aggregated View</h2>
+      {ans && <AggregatedChart monthlyView={monthlyView} />}
+
+    </div>
+  ) 
 }
 
-export default Upload3;
+export default AggregatedTable;
