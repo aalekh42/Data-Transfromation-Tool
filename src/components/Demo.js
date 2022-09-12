@@ -2,12 +2,13 @@ import React, { useState } from 'react'
 import { setHhData } from '../redux';
 import {connect} from 'react-redux';
 
-function Demo({hhData,name}) {
+function Demo({hhData,name,setHhData}) {
   const [user,setUser]= useState(name);
   return (
     <>
         <div>Username ,{name} </div>
         <h6>HH DATA:{hhData}</h6>
+        <button onClick={()=>setHhData(hhData+1)}>Click</button>
     </>
   )
 }
@@ -24,7 +25,7 @@ const mapStateToProps = state =>{
 //STEP 2 (Use dispatch as a paramter and returns a function. Here e can use action Creater methods will act as an props)
 const mapDispatchToProps=dispatch=>{
     return{
-        setHhData:()=>dispatch(setHhData())
+        setHhData:(data)=>dispatch(setHhData(data))
     }
 }
 
