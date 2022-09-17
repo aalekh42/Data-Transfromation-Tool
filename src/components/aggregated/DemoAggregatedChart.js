@@ -14,7 +14,7 @@ import {
   BarChart,
 } from "recharts";
 
-export default class AggregatedChart extends PureComponent {
+export default class DemoAggregatedChart extends PureComponent {
   render() {
     const { monthlyView } = this.props;
     // console.log("Charts",monthlyView);

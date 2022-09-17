@@ -14,16 +14,16 @@ import {
   BarChart,
 } from "recharts";
 
-export default class AggregatedChart extends PureComponent {
+export default class DemoMonthlyChart extends PureComponent {
   render() {
-    const { monthlyView } = this.props;
-    // console.log("Charts",monthlyView);
+    const { dailyView } = this.props;
+    const onlyFeb = dailyView && dailyView.filter((elem)=>elem.Month=== 'Feb')
     return (
       <ResponsiveContainer width="100%" aspect={3}>
         <ComposedChart
           width={500}
           height={400}
-          data={monthlyView}
+          data={onlyFeb}
           margin={{
             top: 20,
             right: 20,
@@ -32,7 +32,7 @@ export default class AggregatedChart extends PureComponent {
           }}
         >
           <CartesianGrid stroke="#f5f5f5" />
-          <XAxis dataKey="MonthYear" scale="band" />
+          <XAxis dataKey="FromDateTime" scale="band" />
           <YAxis />
           <Tooltip />
           <Legend />
@@ -43,7 +43,7 @@ export default class AggregatedChart extends PureComponent {
 
           {/* <Line type="monotone" dataKey="offPeakVol" stroke="#1b8690" /> */}
           {/* <Scatter dataKey="weekendVol" fill="red" /> */}
-          <Line type="monotone" dataKey="MonthlyBase" stroke='red' strokeDasharray="5 5" />
+          {/* <Line type="monotone" dataKey="MonthlyBase" stroke='red' strokeDasharray="5 5" /> */}
           {/* <Line type="monotone" dataKey="weekendVol" stroke='green' strokeDasharray="5 5" /> */}
 
         </ComposedChart>
