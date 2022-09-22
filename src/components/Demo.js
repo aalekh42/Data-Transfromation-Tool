@@ -3,7 +3,6 @@ import { useCSVReader } from "react-papaparse";
 import { connect } from "react-redux";
 import '../css/home.css';
 import { setHhData } from "../redux";
-import Demotabs from "./Demotabs";
 
 const styles = {
   csvReader: {
@@ -115,7 +114,7 @@ function Demo({hhData,setHhData}) {
 
       <div className="row">
         <div className="col-12 upload-block">
-          {hhData && <Demotabs ans={hhData}/>}
+          {/* {hhData} */}
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-export const AGGREGATEDCOLUMNS = [
+export const COLUMNS = [
     {
       Header: 'Mpan',
       accessor: 'CurveCode',

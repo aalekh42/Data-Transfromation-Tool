@@ -10,9 +10,7 @@ export default function App() {
     <Provider store={store}>
       <Router>
         <Routes>
-          {/* <Route exact path="/" element={<Home />}></Route> */}
-          <Route exact path="/" element={<Demo />}></Route>
-
+          <Route exact path="/" element={<Home />}></Route>
         </Routes>
       </Router>
     </Provider>
