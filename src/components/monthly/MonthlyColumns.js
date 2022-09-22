@@ -31,10 +31,10 @@ export const MONTHLYCOLUMNS = [
       Header: 'Offpeak Vol',
       accessor: 'offPeakVol',
     },
-    {
-      Header: 'Days in Month',
-      accessor: 'daysInMonth',
-    },
+    // {
+    //   Header: 'Days in Month',
+    //   accessor: 'daysInMonth',
+    // },
     // {
     //   Header: 'Monthly Base',
     //   accessor: 'MonthlyBase',
