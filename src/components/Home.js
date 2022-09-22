@@ -70,11 +70,7 @@ export default function Home() {
         <div className="col-12 upload-block">
           <CSVReader
             onUploadAccepted={(results) => {
-              console.log("---------------------------");
               setHhData(results.data);
-              //console.log(results);
-              console.log("---------------------------");
-              console.log("HHDATA_JSON", ans);
             }}
           >
             {({

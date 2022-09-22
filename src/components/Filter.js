@@ -5,7 +5,6 @@ function Filter({ filterItems, categoryItems }) {
   return (
     <div>
       <h2>Filter</h2>
-      <hr />
       <div className="list-checkbox">
         <input
           onChange={(e) => {
