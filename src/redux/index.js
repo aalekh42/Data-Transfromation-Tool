@@ -1,1 +1,1 @@
-export {setHhData} from './actions/DttActions';
+export {setHhData,setAggregatedData} from './actions/DttActions';
