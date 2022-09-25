@@ -5,7 +5,6 @@ import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import AggregatedTable from "./Aggregated/AggregatedTable";
-import { Link } from "react-router-dom";
 import "../css/home.css";
 import moment from "moment";
 import MonthlyTable from "./Monthly/MonthlyTable";
@@ -15,7 +14,6 @@ export default function Viewtabs({ ans }) {
   let data = {};
   let category = [];
   const [items, setItems] = React.useState(data);
-  const [filterCheck, setFilterCheck] = React.useState(false);
   const [categoryItems, setCategoryItems] = React.useState("");
 
   const [value, setValue] = React.useState("1");
@@ -86,10 +84,10 @@ export default function Viewtabs({ ans }) {
     if (i === -1) {
       return [...group, current];
     }
-    group[i].TotalVol =parseInt(group[i].TotalVol + current.TotalVol);
-    group[i].peakVol =parseInt(group[i].peakVol + current.peakVol);
-    group[i].duosVol =parseInt(group[i].duosVol + current.duosVol);
-    group[i].offPeakVol =parseInt(group[i].offPeakVol + current.offPeakVol);
+    group[i].TotalVol = parseInt(group[i].TotalVol + current.TotalVol);
+    group[i].peakVol = parseInt(group[i].peakVol + current.peakVol);
+    group[i].duosVol = parseInt(group[i].duosVol + current.duosVol);
+    group[i].offPeakVol = parseInt(group[i].offPeakVol + current.offPeakVol);
     //Can include weekends,offPeak value as well
     return group;
   };
@@ -164,7 +162,7 @@ export default function Viewtabs({ ans }) {
 
   const filterItems = (e) => {
     const { name, checked } = e.target;
-    if (name == "all select") {
+    if (name === "all select") {
       let temp = categoryItems.map((elem) => {
         return {
           ...elem,
@@ -172,24 +170,23 @@ export default function Viewtabs({ ans }) {
         };
       });
       setCategoryItems(temp);
-      setItems(data.monthly);
-      setFilterCheck(true);
+      setItems(data);
       return;
     } else {
       let temp = categoryItems?.map((elem) =>
         elem.name === name ? { ...elem, isChecked: checked } : elem
       );
       const res1 = data.monthly.filter((page1) =>
-        temp.find(
+        temp.some(
           (page2) => page1.CurveCode === page2.name && page2.isChecked === true
         )
       );
       setCategoryItems(temp);
-      setFilterCheck(true);
-      setItems(res1);
+      setItems({ ...items,monthly:res1 });
     }
-    console.log(`render The ${name} selected is ${checked}`);
+    console.log(`The ${name} selected is ${checked}`);
   };
+  console.log("%c render viewtabs (parent)",'background: #222; color: #bada55');
   return (
     <>
       <Box sx={{ width: "100%", typography: "body1" }}>
@@ -207,32 +204,22 @@ export default function Viewtabs({ ans }) {
                 <Filter
                   filterItems={filterItems}
                   categoryItems={categoryItems}
-                  items={items}
                 />
               </div>
               <div
                 className="col-9 upload-block"
                 style={{ marginLeft: "-30px" }}
               >
-                {filterCheck ? (
-                  <AggregatedTable
-                    monthlyView={items}
-                    categoryItems={categoryItems}
-                  />
-                ) : (
-                  <AggregatedTable
-                    monthlyView={items.monthly}
-                    categoryItems={categoryItems}
-                  />
-                )}
-                {/* {filterCheck?(<MonthlyTable aggregated={items} categoryItems={categoryItems} />):(<MonthlyTable aggregated={items.monthly} categoryItems={categoryItems}/>)} */}
+                <AggregatedTable
+                  monthlyView={items.monthly}
+                  categoryItems={categoryItems}
+                />
               </div>
             </div>
           </TabPanel>
 
           <TabPanel value="2">
-            {/* <JsonToTable json={perDayData}/> */}
-            <MonthlyTable perDayData={perDayData} category={categoryItems}/>
+            <MonthlyTable perDayData={perDayData} category={categoryItems} />
           </TabPanel>
           <TabPanel value="3">
             <div>Weekly View</div>
