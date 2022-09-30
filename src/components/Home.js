@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useCSVReader } from "react-papaparse";
-import '../css/home.css';
+import "../css/home.css";
+import Spinner from "./Spinner";
 import Viewtabs from "./Viewtabs";
+const LazyViewtabs = React.lazy(()=>import("./Viewtabs"));
 
 const styles = {
   csvReader: {
@@ -56,7 +58,7 @@ export default function Home() {
         }
       });
     setAns(hhDataJson);
-
+    
   };
 
   return (
@@ -108,7 +110,9 @@ export default function Home() {
 
       <div className="row">
         <div className="col-12 upload-block">
-          {ans && <Viewtabs ans={ans}/>}
+          <React.Suspense fallback={<Spinner />}>
+            {ans && <LazyViewtabs ans={ans} />}
+          </React.Suspense>
         </div>
       </div>
     </div>

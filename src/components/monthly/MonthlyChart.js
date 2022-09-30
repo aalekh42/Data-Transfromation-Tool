@@ -1,4 +1,6 @@
 import React, { PureComponent } from "react";
+import moment from "moment";
+import {days_of_a_year} from '../../utils/DateMonths'
 import {
   ComposedChart,
   Line,
@@ -48,6 +50,7 @@ export default class MonthlyChart extends PureComponent {
       "Nov",
       "Dec",
     ];
+    const uniqueYears=perDayData && new Set(perDayData?.map(x=>x.years));
     const dailyView =
       perDayData &&
       perDayData.filter(
@@ -55,7 +58,23 @@ export default class MonthlyChart extends PureComponent {
           elem.Month === `${this.state.monthValue}` &&
           elem.CurveCode === `${this.state.mpanValue}`
       );
-    //get monthlybase and annual base as well
+    const peakKwh = dailyView && dailyView?.map((x) => x.peakVol);
+    const maxKwh = peakKwh && Math.max(...peakKwh);
+    const daysInMonth =dailyView && dailyView?.map((x) =>moment(x.FromDateTime).daysInMonth())[0];
+    //const totalDaysInYear=perDayData && new Set(perDayData?.map((x)=>days_of_a_year(x.years)));
+    const TotalVol = dailyView && dailyView.reduce(
+      (accum, curr) => accum + curr.TotalVol,
+      0
+    );
+    const annualVol= perDayData && perDayData?.filter(x=>x.CurveCode === `${this.state.mpanValue}`).reduce((accum,curr)=>accum+curr.TotalVol,0)
+
+    const dailyUpdated =
+      dailyView &&
+      dailyView.map((elem) => {
+        let op = Object.assign(elem, { maxKwh: maxKwh,daysInMonth:daysInMonth,monthlyBase:TotalVol/daysInMonth ,annualVol:annualVol/365});
+        return op;
+      });
+    console.log("daily", dailyUpdated,[...uniqueYears]);
     const options =
       months &&
       months.map((month, index) => (
@@ -66,7 +85,7 @@ export default class MonthlyChart extends PureComponent {
 
     return (
       <>
-        
+
         <select value={this.state.monthValue} onChange={this.handleChangeMonth}>
           <option value="">Select option</option>
           {options}
@@ -78,11 +97,12 @@ export default class MonthlyChart extends PureComponent {
         >
           <option value="">Select option</option>
 
-          {mpans.map((mpan, index) => (
-            <option key={index} value={mpan}>
-              {mpan}
-            </option>
-          ))}
+          {mpans &&
+            mpans.map((mpan, index) => (
+              <option key={index} value={mpan}>
+                {mpan}
+              </option>
+            ))}
         </select>
         <p>
           Selected:
@@ -111,22 +131,19 @@ export default class MonthlyChart extends PureComponent {
           >
             <CartesianGrid stroke="#f5f5f5" />
             <XAxis xAxisId="0" dataKey="FromDateTime" scale="band" />
-            {/* <XAxis
-              xAxisId="1"
-              dataKey="CurveCode"
-              allowDuplicatedCategory={false}
-            /> */}
+
             <YAxis />
             <Tooltip />
             <Legend />
             {/* <Area type="monotone" dataKey="TotalVol" fill="#99BEB6" stroke="#8884d8" /> */}
             <Bar dataKey="peakVol" barSize={20} stackId="a" fill="#7edee7" />
-            <Bar dataKey="offPeakVol" barSize={20} stackId="a" fill="#1b8690" />
-            {/* <Line type="monotone" dataKey="maxKwh" stroke='blue' /> */}
 
-            {/* <Line type="monotone" dataKey="offPeakVol" stroke="#1b8690" /> */}
-            {/* <Scatter dataKey="weekendVol" fill="red" /> */}
-            {/* <Line type="monotone" dataKey="MonthlyBase" stroke='red' strokeDasharray="5 5" /> */}
+            <Bar dataKey="offPeakVol" barSize={20} stackId="a" fill="#1b8690" />
+
+            <Line type="monotone" dataKey="maxKwh" stroke="blue" dot={{ r: 2 }}/> 
+            <Line type="monotone" dataKey="monthlyBase" stroke="red" strokeWidth={3} dot={{ r: 0 }}/> 
+
+            <Line type="monotone" dataKey="annualVol" stroke='darkred' strokeDasharray="5 5" />
           </ComposedChart>
         </ResponsiveContainer>
       </>
