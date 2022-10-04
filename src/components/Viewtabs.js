@@ -9,14 +9,20 @@ import "../css/home.css";
 import moment from "moment";
 import MonthlyTable from "./Monthly/MonthlyTable";
 import Filter from "./Filter";
+import { getWeekNum } from "../utils/DateMonths";
+import _ from "lodash";
+import WeeklyTable from "./Weekly/WeeklyTable";
 
-export default function Viewtabs({ ans }) {
+const LazyAggregatedTable = React.lazy(() =>
+  import("./Aggregated/AggregatedTable")
+);
+
+function Viewtabs({ ans }) {
   let data = {};
   let category = [];
   const [items, setItems] = React.useState(data);
   const [categoryItems, setCategoryItems] = React.useState("");
-
-  const [value, setValue] = React.useState("1");
+  const [value, setValue] = React.useState("2");
 
   React.useEffect(() => {
     getCategories();
@@ -31,6 +37,8 @@ export default function Viewtabs({ ans }) {
     let month = moment(single.FromDateTime).format("MMM");
     let year = moment(single.FromDateTime).format("YYYY");
     let value = parseFloat(single.value);
+    let day = moment(date).format("ddd");
+
     let time = moment(single.FromDateTime, moment.defaultFormat).format(
       "YYYY-MM-DD HH:mm"
     );
@@ -57,7 +65,7 @@ export default function Viewtabs({ ans }) {
     var offPeak = !peakCondition1 && !peakCondition2 && weekday ? value : 0;
     var offPeakVol = weekendVol + offPeak;
     let daysInMonth = moment(date).daysInMonth();
-
+    let weekNo = getWeekNum(date);
     return {
       CurveCode: single.CurveCode,
       FromDateTime: date,
@@ -70,6 +78,9 @@ export default function Viewtabs({ ans }) {
       offPeakVol: offPeakVol,
       daysInMonth: daysInMonth,
       MonthYear: month + year,
+      weekNo: weekNo,
+      day: day,
+      dayDate: day + moment(date).format("DD-MM-YYYY"),
     };
   };
 
@@ -120,19 +131,44 @@ export default function Viewtabs({ ans }) {
 
     return group.yearlyDays;
   };
+  const getWeekly = (group, current) => {
+    let i = group.findIndex(
+      (single) =>
+        single.MonthYear === current.MonthYear &&
+        single.weekNo === current.weekNo &&
+        single.CurveCode === current.CurveCode
+    );
+    if (i === -1) {
+      return [...group, current];
+    }
+    group[i].TotalVol = parseInt(group[i].TotalVol + current.TotalVol); //returns totalVolume
+    group[i].peakVol = parseInt(group[i].peakVol + current.peakVol); //returns peakVol
+    group[i].duosVol = parseInt(group[i].duosVol + current.duosVol); //returns duosVol
+    group[i].weekendVol = parseInt(group[i].weekendVol + current.weekendVol); //returns weekendVol
+    group[i].offPeakVol = parseInt(group[i].offPeakVol + current.offPeakVol); //returns offPeakVol
+
+    return group;
+  };
 
   const perDayData =
     ans &&
     ans
       ?.map(mapper)
-      .filter((e) => e.CurveCode !== undefined)
+      .filter(
+        (e) =>
+          e.CurveCode !== undefined ||
+          e.FromDateTime !== undefined ||
+          e.value !== undefined
+      )
       .reduce(getDays, []);
   perDayData.sort(function (a, b) {
-    // Turn your strings into dates, and then subtract them
-    // to get a value that is either negative, positive, or zero.
     return new Date(a.FromDateTime) - new Date(b.FromDateTime);
   });
   const perDayCopy = ans && JSON.parse(JSON.stringify(perDayData));
+  const perDayCopy2 = ans && JSON.parse(JSON.stringify(perDayData));
+
+  //var dailyCopy = _.clone(perDayData); //shallowCopy
+  const weekly = ans && perDayCopy2.reduce(getWeekly, []);
   const monthlyView = ans && perDayCopy.reduce(getMonths, []);
   const peakKwh = ans && monthlyView?.map((x) => x.peakVol);
   const maxKwh = Math.max(...peakKwh);
@@ -146,9 +182,11 @@ export default function Viewtabs({ ans }) {
     });
   data.monthly = monthlyView;
   data.daily = perDayData;
-
+  monthlyView.sort(function (a, b) {
+    return new Date(a.FromDateTime) - new Date(b.FromDateTime);
+  });
   const getCategories = () => {
-    const categories = data.monthly.map((elem) => {
+    const categories = monthlyView.map((elem) => {
       return elem.CurveCode;
     });
     var uniqueCategories = categories.filter(
@@ -162,7 +200,7 @@ export default function Viewtabs({ ans }) {
 
   const filterItems = (e) => {
     const { name, checked } = e.target;
-    if (name === "all select") {
+    if (name == "all select") {
       let temp = categoryItems.map((elem) => {
         return {
           ...elem,
@@ -170,23 +208,23 @@ export default function Viewtabs({ ans }) {
         };
       });
       setCategoryItems(temp);
-      setItems(data);
+      setItems({ ...items, monthly: data.monthly });
       return;
     } else {
       let temp = categoryItems?.map((elem) =>
         elem.name === name ? { ...elem, isChecked: checked } : elem
       );
       const res1 = data.monthly.filter((page1) =>
-        temp.some(
+        temp.find(
           (page2) => page1.CurveCode === page2.name && page2.isChecked === true
         )
       );
       setCategoryItems(temp);
-      setItems({ ...items,monthly:res1 });
+      setItems({ ...items, monthly: res1 });
     }
-    console.log(`The ${name} selected is ${checked}`);
+    console.log(`render The ${name} selected is ${checked}`);
   };
-  console.log("%c render viewtabs (parent)",'background: #222; color: #bada55');
+
   return (
     <>
       <Box sx={{ width: "100%", typography: "body1" }}>
@@ -210,10 +248,18 @@ export default function Viewtabs({ ans }) {
                 className="col-9 upload-block"
                 style={{ marginLeft: "-30px" }}
               >
-                <AggregatedTable
-                  monthlyView={items.monthly}
-                  categoryItems={categoryItems}
-                />
+                <React.Suspense
+                  fallback={
+                    <h2 style={{ textAlign: "center", fontSize: "18px" }}>
+                      Loading........
+                    </h2>
+                  }
+                >
+                  <LazyAggregatedTable
+                    monthlyView={items.monthly}
+                    categoryItems={categoryItems}
+                  />
+                </React.Suspense>
               </div>
             </div>
           </TabPanel>
@@ -222,10 +268,12 @@ export default function Viewtabs({ ans }) {
             <MonthlyTable perDayData={perDayData} category={categoryItems} />
           </TabPanel>
           <TabPanel value="3">
-            <div>Weekly View</div>
+            <WeeklyTable weekly={weekly} category={categoryItems} />
           </TabPanel>
         </TabContext>
       </Box>
     </>
   );
 }
+
+export default React.memo(Viewtabs);
